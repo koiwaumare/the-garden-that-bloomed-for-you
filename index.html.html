@@ -1,0 +1,1194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#17152d" />
+  <title>The Garden That Bloomed for You</title>
+  <style>
+    :root {
+      --night: #17152d;
+      --deep: #262044;
+      --violet: #7461a8;
+      --lavender: #b9a7e7;
+      --rose: #ff789c;
+      --peach: #ffc39e;
+      --gold: #ffe59b;
+      --mint: #9de2bd;
+      --leaf: #4e9a74;
+      --cream: #fff9ed;
+      --ink: #302a46;
+      --glass: rgba(255,255,255,.1);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; overflow: hidden; }
+    body {
+      color: var(--cream);
+      background: var(--night);
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    button { font: inherit; }
+
+    #app {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        radial-gradient(circle at 50% 115%, #71496f 0 22%, transparent 52%),
+        linear-gradient(#17152d 0%, #252043 58%, #4a355a 100%);
+      transition: background 1.8s ease;
+    }
+
+    #app.dawn {
+      background:
+        radial-gradient(circle at 50% 110%, rgba(255,233,170,.9), transparent 34%),
+        linear-gradient(#806da8 0%, #d896a8 46%, #ffd4ad 100%);
+    }
+
+    .stars, .fireflies-bg, .petals-layer {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .star {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: #fff;
+      opacity: .7;
+      box-shadow: 0 0 8px #fff;
+      animation: twinkle var(--speed) ease-in-out infinite alternate;
+    }
+    @keyframes twinkle { to { opacity: .12; transform: scale(.55); } }
+
+    .ambient-fly {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 8px 3px rgba(255,229,155,.62);
+      animation: drift var(--speed) ease-in-out infinite alternate;
+    }
+    @keyframes drift {
+      to { transform: translate(var(--dx), var(--dy)) scale(.65); opacity: .35; }
+    }
+
+    .moon {
+      position: absolute;
+      top: 7vh;
+      right: 9vw;
+      width: clamp(64px, 10vw, 110px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #fff3cf;
+      box-shadow: 0 0 55px rgba(255,240,195,.35);
+      opacity: .9;
+      transition: opacity 1.5s, transform 1.5s;
+    }
+    .moon::after {
+      content: "";
+      position: absolute;
+      width: 92%;
+      height: 92%;
+      left: -16%;
+      top: -9%;
+      border-radius: 50%;
+      background: #1a1731;
+      transition: background 1.8s;
+    }
+    .dawn .moon { opacity: 0; transform: translateY(-30px); }
+
+    .hills {
+      position: absolute;
+      left: -10%;
+      bottom: -17vh;
+      width: 120%;
+      height: 45vh;
+      border-radius: 50% 50% 0 0;
+      background: #213f3c;
+      box-shadow: inset 0 18px 60px rgba(64,120,92,.28);
+      transition: background 1.8s;
+    }
+    .hills::before, .hills::after {
+      content: "";
+      position: absolute;
+      bottom: 11vh;
+      width: 64%;
+      height: 30vh;
+      border-radius: 50% 50% 0 0;
+      background: #294a47;
+    }
+    .hills::before { left: -22%; transform: rotate(8deg); }
+    .hills::after { right: -24%; transform: rotate(-9deg); }
+    .dawn .hills { background: #44785c; }
+    .dawn .hills::before, .dawn .hills::after { background: #51886a; }
+
+    .top-ui {
+      position: absolute;
+      z-index: 30;
+      top: 16px;
+      left: 50%;
+      width: min(92%, 880px);
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .logo {
+      font-size: clamp(11px, 2vw, 14px);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      opacity: .78;
+    }
+
+    .journey {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 12px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 999px;
+      background: rgba(20,16,39,.36);
+      backdrop-filter: blur(12px);
+    }
+    .step-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.22);
+      transition: .45s;
+    }
+    .step-dot.active { background: var(--gold); box-shadow: 0 0 11px var(--gold); }
+    .step-dot.done { background: var(--rose); }
+
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 50%;
+      color: #fff;
+      background: rgba(20,16,39,.38);
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+      font-size: 19px;
+    }
+
+    .screen {
+      position: absolute;
+      z-index: 10;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 78px 20px 24px;
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(.985);
+      transition: opacity .55s ease, transform .55s ease, visibility .55s;
+    }
+    .screen.active { opacity: 1; visibility: visible; transform: scale(1); }
+
+    .panel {
+      width: min(100%, 760px);
+      max-height: calc(100vh - 108px);
+      max-height: calc(100dvh - 108px);
+      overflow: auto;
+      padding: clamp(23px, 5vw, 48px);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 32px;
+      background: linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.055));
+      box-shadow: 0 24px 90px rgba(5,4,14,.4), inset 0 1px rgba(255,255,255,.2);
+      backdrop-filter: blur(22px);
+      text-align: center;
+      scrollbar-width: none;
+    }
+    .panel::-webkit-scrollbar { display: none; }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+    }
+    h1, h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-weight: 500; }
+    h1 { font-size: clamp(38px, 8vw, 76px); line-height: .98; letter-spacing: -.04em; }
+    h2 { font-size: clamp(32px, 6vw, 54px); line-height: 1.03; }
+    .lead {
+      max-width: 570px;
+      margin: 20px auto 0;
+      color: rgba(255,255,255,.77);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(17px, 2.5vw, 21px);
+      line-height: 1.65;
+    }
+
+    .primary-btn {
+      position: relative;
+      min-width: 220px;
+      margin-top: 28px;
+      padding: 15px 24px;
+      overflow: hidden;
+      border: 0;
+      border-radius: 999px;
+      color: var(--ink);
+      background: linear-gradient(120deg, var(--gold), var(--peach));
+      box-shadow: 0 12px 30px rgba(255,195,158,.22);
+      cursor: pointer;
+      font-weight: 800;
+      letter-spacing: .04em;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .primary-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 38px rgba(255,195,158,.3); }
+    .primary-btn:active { transform: translateY(1px) scale(.98); }
+
+    .tiny-seed {
+      position: relative;
+      width: 74px;
+      height: 74px;
+      margin: 0 auto 25px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff8cf 0 5%, #ffd77c 6% 14%, transparent 16%);
+      box-shadow: 0 0 45px rgba(255,225,140,.58);
+      animation: seedPulse 2s ease-in-out infinite;
+    }
+    .tiny-seed::before, .tiny-seed::after {
+      content: "";
+      position: absolute;
+      top: 37px;
+      width: 30px;
+      height: 17px;
+      background: var(--mint);
+      border-radius: 100% 0 100% 0;
+    }
+    .tiny-seed::before { left: 7px; transform: rotate(24deg); }
+    .tiny-seed::after { right: 7px; transform: rotate(66deg) scaleX(-1); }
+    @keyframes seedPulse { 50% { transform: translateY(-7px); filter: brightness(1.15); } }
+
+    .chapter-head { margin-bottom: 18px; }
+    .chapter-copy { margin: 10px 0 0; color: rgba(255,255,255,.72); font-size: 15px; }
+
+    .game-shell {
+      position: relative;
+      width: min(100%, 860px);
+      border: 1px solid rgba(255,255,255,.17);
+      border-radius: 28px;
+      overflow: hidden;
+      background: rgba(10,8,25,.25);
+      box-shadow: 0 24px 75px rgba(5,4,14,.34);
+      backdrop-filter: blur(13px);
+    }
+
+    .game-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 15px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+    }
+    .game-title { font-family: Georgia, serif; font-size: clamp(19px, 3vw, 26px); }
+    .counter {
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      white-space: nowrap;
+    }
+
+    #seedCanvas {
+      display: block;
+      width: 100%;
+      height: min(58vh, 470px);
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .game-tip {
+      position: absolute;
+      left: 50%;
+      bottom: 15px;
+      transform: translateX(-50%);
+      width: max-content;
+      max-width: 90%;
+      padding: 8px 13px;
+      border-radius: 999px;
+      color: rgba(255,255,255,.82);
+      background: rgba(19,15,38,.66);
+      font-size: 12px;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+
+    .flower-field {
+      position: relative;
+      min-height: min(58vh, 470px);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      align-items: end;
+      gap: 12px;
+      padding: 70px 30px 35px;
+      background:
+        radial-gradient(circle at 50% 100%, rgba(91,149,104,.32), transparent 50%),
+        linear-gradient(transparent 65%, rgba(25,66,52,.46));
+    }
+
+    .flower-spot {
+      position: relative;
+      height: 260px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: manipulation;
+      outline: none;
+    }
+    .stem {
+      position: absolute;
+      bottom: 25px;
+      width: 8px;
+      height: 145px;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #367452, #68ad78);
+      transform-origin: bottom;
+      transform: scaleY(.52);
+      transition: transform .7s cubic-bezier(.2,.8,.25,1.25);
+    }
+    .stem::before, .stem::after {
+      content: "";
+      position: absolute;
+      width: 42px;
+      height: 21px;
+      background: #5fa273;
+      border-radius: 100% 0 100% 0;
+      opacity: 0;
+      transition: opacity .5s .2s, transform .5s .2s;
+    }
+    .stem::before { left: -40px; top: 70px; transform: rotate(20deg) scale(.4); }
+    .stem::after { right: -40px; top: 103px; transform: rotate(70deg) scaleX(-1) scale(.4); }
+
+    .bloom {
+      position: absolute;
+      bottom: 90px;
+      width: 28px;
+      height: 34px;
+      border-radius: 55% 55% 45% 45%;
+      background: var(--rose);
+      box-shadow: 0 0 22px rgba(255,120,156,.18);
+      transform: scale(.8);
+      transition: bottom .7s cubic-bezier(.2,.8,.25,1.25), transform .7s;
+    }
+    .petal {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 40px;
+      height: 66px;
+      margin: -55px 0 0 -20px;
+      border-radius: 60% 60% 45% 45%;
+      background: var(--petal);
+      box-shadow: inset 0 -10px 16px rgba(116,55,99,.13), 0 0 20px rgba(255,158,190,.18);
+      transform-origin: 50% 55px;
+      transform: rotate(var(--r)) scale(.06);
+      opacity: 0;
+      transition: transform .7s cubic-bezier(.16,.9,.3,1.2), opacity .35s;
+    }
+    .flower-center {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 29px;
+      height: 29px;
+      margin: -14px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: inset -4px -5px rgba(181,124,69,.16), 0 0 18px rgba(255,229,155,.35);
+      transform: scale(0);
+      transition: transform .45s .3s cubic-bezier(.2,.9,.3,1.5);
+    }
+    .water-drop {
+      position: absolute;
+      z-index: 5;
+      top: 45px;
+      left: 50%;
+      width: 20px;
+      height: 27px;
+      margin-left: -10px;
+      border-radius: 60% 45% 60% 50%;
+      background: #9ce4ff;
+      box-shadow: 0 0 16px rgba(156,228,255,.55);
+      transform: rotate(45deg);
+      animation: dropHint 1.5s ease-in-out infinite;
+      transition: opacity .3s;
+    }
+    @keyframes dropHint { 50% { transform: translateY(10px) rotate(45deg); } }
+
+    .flower-spot.watered .stem { transform: scaleY(1); }
+    .flower-spot.watered .stem::before { opacity: 1; transform: rotate(20deg) scale(1); }
+    .flower-spot.watered .stem::after { opacity: 1; transform: rotate(70deg) scaleX(-1) scale(1); }
+    .flower-spot.watered .bloom { bottom: 166px; transform: scale(1); background: transparent; }
+    .flower-spot.watered .petal { opacity: 1; transform: rotate(var(--r)) scale(1); }
+    .flower-spot.watered .flower-center { transform: scale(1); }
+    .flower-spot.watered .water-drop { opacity: 0; }
+
+    .melody-wrap {
+      min-height: min(58vh, 470px);
+      display: grid;
+      place-items: center;
+      padding: 25px;
+      background: radial-gradient(circle at 50% 45%, rgba(121,97,168,.28), transparent 55%);
+    }
+    .melody-inner { width: min(100%, 600px); text-align: center; }
+    .melody-status {
+      min-height: 48px;
+      margin: 0 0 15px;
+      color: rgba(255,255,255,.76);
+      font-family: Georgia, serif;
+      font-size: clamp(16px, 3vw, 21px);
+      line-height: 1.4;
+    }
+    .firefly-pad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: clamp(10px, 3vw, 24px);
+    }
+    .fly-btn {
+      position: relative;
+      aspect-ratio: 1;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 50%;
+      background: rgba(255,255,255,.055);
+      cursor: pointer;
+      transition: transform .18s, background .18s, box-shadow .18s;
+    }
+    .fly-btn::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--fly);
+      box-shadow: 0 0 16px 5px color-mix(in srgb, var(--fly) 58%, transparent);
+      transform: translate(-50%,-50%);
+      transition: .18s;
+    }
+    .fly-btn::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 44%;
+      height: 22%;
+      border: 2px solid rgba(255,255,255,.45);
+      border-width: 2px 0;
+      border-radius: 50%;
+      transform: translate(-50%,-50%) rotate(-18deg);
+    }
+    .fly-btn.lit {
+      transform: scale(1.08);
+      background: color-mix(in srgb, var(--fly) 22%, transparent);
+      box-shadow: 0 0 35px color-mix(in srgb, var(--fly) 40%, transparent);
+    }
+    .fly-btn.lit::before { transform: translate(-50%,-50%) scale(1.65); filter: brightness(1.25); }
+    .rounds { display: flex; justify-content: center; gap: 7px; margin-top: 22px; }
+    .round { width: 34px; height: 5px; border-radius: 5px; background: rgba(255,255,255,.15); }
+    .round.done { background: var(--gold); box-shadow: 0 0 8px rgba(255,229,155,.6); }
+
+    #transitionScreen { background: rgba(12,9,27,.26); }
+    .transition-copy { text-align: center; }
+    .transition-copy h2 { max-width: 660px; }
+    .growing-heart {
+      position: relative;
+      width: 110px;
+      height: 100px;
+      margin: 0 auto 30px;
+      animation: heartFloat 1.5s ease-in-out infinite;
+    }
+    .growing-heart::before, .growing-heart::after {
+      content: "";
+      position: absolute;
+      width: 58px;
+      height: 90px;
+      border-radius: 58px 58px 0 0;
+      background: linear-gradient(#ff94ae, #ff6f98);
+      box-shadow: 0 0 40px rgba(255,111,152,.4);
+    }
+    .growing-heart::before { left: 54px; transform: rotate(-45deg); transform-origin: 0 100%; }
+    .growing-heart::after { left: 0; transform: rotate(45deg); transform-origin: 100% 100%; }
+    @keyframes heartFloat { 50% { transform: translateY(-9px) scale(1.04); } }
+
+    #finaleScreen {
+      z-index: 25;
+      overflow-y: auto;
+      align-items: start;
+      padding-top: 76px;
+      padding-bottom: 30px;
+    }
+    .letter {
+      width: min(100%, 680px);
+      position: relative;
+      margin: auto;
+      padding: clamp(28px, 6vw, 58px);
+      border-radius: 28px;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(255,253,246,.94), rgba(255,249,237,.97)),
+        repeating-linear-gradient(0deg, transparent 0 31px, rgba(116,97,168,.12) 32px 33px);
+      box-shadow: 0 30px 100px rgba(42,24,42,.3);
+      text-align: left;
+      user-select: text;
+    }
+    .letter::before {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border: 1px solid rgba(116,97,168,.16);
+      border-radius: 19px;
+      pointer-events: none;
+    }
+    .letter-kicker {
+      color: #a44f71;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .22em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+    .letter h2 { margin: 10px 0 24px; color: #6c517e; text-align: center; }
+    .letter-body {
+      min-height: 300px;
+      white-space: pre-line;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(17px, 3vw, 21px);
+      line-height: 1.75;
+    }
+    .signature {
+      margin-top: 26px;
+      color: #a44f71;
+      font-family: Georgia, serif;
+      font-size: 22px;
+      font-style: italic;
+      text-align: right;
+    }
+    .final-actions { text-align: center; }
+    .final-actions .primary-btn { min-width: 180px; }
+
+    .falling-petal {
+      position: absolute;
+      top: -30px;
+      width: 15px;
+      height: 24px;
+      border-radius: 100% 0 100% 0;
+      background: var(--c);
+      opacity: .8;
+      animation: petalFall var(--duration) linear forwards;
+    }
+    @keyframes petalFall {
+      to { transform: translate3d(var(--drift), 110vh, 0) rotate(760deg); opacity: .15; }
+    }
+
+    .toast {
+      position: absolute;
+      z-index: 50;
+      left: 50%;
+      bottom: 24px;
+      width: max-content;
+      max-width: calc(100% - 28px);
+      padding: 11px 16px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 999px;
+      color: #fff;
+      background: rgba(24,19,44,.82);
+      box-shadow: 0 12px 30px rgba(0,0,0,.2);
+      backdrop-filter: blur(12px);
+      transform: translate(-50%, 25px);
+      opacity: 0;
+      pointer-events: none;
+      transition: .3s;
+      text-align: center;
+      font-size: 13px;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%,0); }
+
+    @media (max-width: 650px) {
+      .top-ui { top: 10px; width: calc(100% - 20px); }
+      .logo { max-width: 95px; line-height: 1.3; }
+      .journey { padding: 7px 10px; }
+      .screen { padding: 64px 10px 12px; }
+      .panel { border-radius: 24px; padding: 25px 20px; }
+      .game-shell { border-radius: 22px; }
+      .game-header { padding: 12px 15px; }
+      #seedCanvas, .flower-field, .melody-wrap { height: calc(100dvh - 145px); min-height: 430px; max-height: 600px; }
+      .flower-field { grid-template-columns: repeat(2, 1fr); align-items: center; padding: 34px 15px 18px; }
+      .flower-spot { height: 205px; }
+      .stem { height: 108px; }
+      .bloom { bottom: 67px; }
+      .flower-spot.watered .bloom { bottom: 128px; }
+      .water-drop { top: 25px; }
+      .petal { width: 32px; height: 54px; margin: -45px 0 0 -16px; transform-origin: 50% 45px; }
+      .firefly-pad { gap: 9px; }
+      .letter { padding: 35px 26px; border-radius: 23px; }
+      .letter-body { min-height: 355px; }
+    }
+
+    @media (max-height: 620px) and (orientation: landscape) {
+      .screen { padding-top: 59px; }
+      .top-ui { top: 7px; }
+      .panel { padding: 20px 28px; }
+      .tiny-seed { width: 48px; height: 48px; margin-bottom: 12px; }
+      .lead { margin-top: 10px; line-height: 1.4; }
+      .primary-btn { margin-top: 14px; }
+      #seedCanvas, .flower-field, .melody-wrap { height: calc(100vh - 118px); min-height: 290px; }
+      .flower-field { min-height: 290px; }
+      .flower-spot { height: 220px; }
+      #finaleScreen { padding-top: 55px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <main id="app" aria-label="The Garden That Bloomed for You interactive love game">
+    <div class="stars" id="stars"></div>
+    <div class="fireflies-bg" id="ambient"></div>
+    <div class="moon"></div>
+    <div class="hills"></div>
+    <div class="petals-layer" id="petalsLayer"></div>
+
+    <header class="top-ui">
+      <div class="logo">A little world for My Love</div>
+      <div class="journey" aria-label="Journey progress">
+        <span class="step-dot active"></span>
+        <span class="step-dot"></span>
+        <span class="step-dot"></span>
+        <span class="step-dot"></span>
+      </div>
+      <button class="icon-btn" id="soundBtn" aria-label="Mute sound" title="Sound">♪</button>
+    </header>
+
+    <section class="screen active" id="introScreen">
+      <div class="panel">
+        <div class="tiny-seed" aria-hidden="true"></div>
+        <p class="eyebrow">A tiny surprise from Hide</p>
+        <h1>The Garden That<br>Bloomed for You</h1>
+        <p class="lead">They say beautiful things need time to grow. But somehow, in only four days, you already made a little garden bloom inside my heart.</p>
+        <button class="primary-btn" id="beginBtn">Enter the garden ✦</button>
+      </div>
+    </section>
+
+    <section class="screen" id="seedScreen">
+      <div class="game-shell">
+        <div class="game-header">
+          <div>
+            <div class="game-title">Catch the wishing seeds</div>
+            <div class="chapter-copy">Every beautiful story begins with something small.</div>
+          </div>
+          <div class="counter"><span id="seedCount">0</span> / 6</div>
+        </div>
+        <canvas id="seedCanvas" width="900" height="500"></canvas>
+        <div class="game-tip">Move the basket with your finger, mouse, or arrow keys</div>
+      </div>
+    </section>
+
+    <section class="screen" id="flowerScreen">
+      <div class="game-shell">
+        <div class="game-header">
+          <div>
+            <div class="game-title">Help our garden bloom</div>
+            <div class="chapter-copy">Tap each little drop and wake the flowers.</div>
+          </div>
+          <div class="counter"><span id="flowerCount">0</span> / 4</div>
+        </div>
+        <div class="flower-field" id="flowerField">
+          <button class="flower-spot" aria-label="Water the pink flower" style="--petal:#ff86a7">
+            <span class="water-drop"></span><span class="stem"></span>
+            <span class="bloom"><i class="petal" style="--r:0deg"></i><i class="petal" style="--r:72deg"></i><i class="petal" style="--r:144deg"></i><i class="petal" style="--r:216deg"></i><i class="petal" style="--r:288deg"></i><i class="flower-center"></i></span>
+          </button>
+          <button class="flower-spot" aria-label="Water the purple flower" style="--petal:#b9a7e7">
+            <span class="water-drop"></span><span class="stem"></span>
+            <span class="bloom"><i class="petal" style="--r:0deg"></i><i class="petal" style="--r:72deg"></i><i class="petal" style="--r:144deg"></i><i class="petal" style="--r:216deg"></i><i class="petal" style="--r:288deg"></i><i class="flower-center"></i></span>
+          </button>
+          <button class="flower-spot" aria-label="Water the golden flower" style="--petal:#ffc987">
+            <span class="water-drop"></span><span class="stem"></span>
+            <span class="bloom"><i class="petal" style="--r:0deg"></i><i class="petal" style="--r:72deg"></i><i class="petal" style="--r:144deg"></i><i class="petal" style="--r:216deg"></i><i class="petal" style="--r:288deg"></i><i class="flower-center"></i></span>
+          </button>
+          <button class="flower-spot" aria-label="Water the blue flower" style="--petal:#8ed9df">
+            <span class="water-drop"></span><span class="stem"></span>
+            <span class="bloom"><i class="petal" style="--r:0deg"></i><i class="petal" style="--r:72deg"></i><i class="petal" style="--r:144deg"></i><i class="petal" style="--r:216deg"></i><i class="petal" style="--r:288deg"></i><i class="flower-center"></i></span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="melodyScreen">
+      <div class="game-shell">
+        <div class="game-header">
+          <div>
+            <div class="game-title">Remember the firefly melody</div>
+            <div class="chapter-copy">Watch their glow, then repeat the pattern.</div>
+          </div>
+          <div class="counter">FINAL GAME</div>
+        </div>
+        <div class="melody-wrap">
+          <div class="melody-inner">
+            <p class="melody-status" id="melodyStatus">The fireflies are getting ready…</p>
+            <div class="firefly-pad">
+              <button class="fly-btn" style="--fly:#ffe59b" data-fly="0" aria-label="Golden firefly"></button>
+              <button class="fly-btn" style="--fly:#ff8eae" data-fly="1" aria-label="Pink firefly"></button>
+              <button class="fly-btn" style="--fly:#9de2bd" data-fly="2" aria-label="Green firefly"></button>
+              <button class="fly-btn" style="--fly:#b9a7e7" data-fly="3" aria-label="Purple firefly"></button>
+            </div>
+            <div class="rounds"><span class="round"></span><span class="round"></span><span class="round"></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="transitionScreen">
+      <div class="transition-copy">
+        <div class="growing-heart"></div>
+        <p class="eyebrow">You brought every little piece to life</p>
+        <h2>But there is one last thing<br>I grew just for you…</h2>
+      </div>
+    </section>
+
+    <section class="screen" id="finaleScreen">
+      <article class="letter">
+        <div class="letter-kicker">Happy 4th day, My Love</div>
+        <h2>To the one who made my heart bloom</h2>
+        <div class="letter-body" id="letterBody"></div>
+        <div class="signature" id="signature" hidden>Forever yours,<br>Honey ♥</div>
+        <div class="final-actions" id="finalActions" hidden>
+          <button class="primary-btn" id="replayBtn">Grow it again</button>
+        </div>
+      </article>
+    </section>
+
+    <div class="toast" id="toast" aria-live="polite"></div>
+  </main>
+
+  <script>
+  (() => {
+    "use strict";
+
+    const $ = selector => document.querySelector(selector);
+    const $$ = selector => [...document.querySelectorAll(selector)];
+    const app = $("#app");
+    const screens = $$(".screen");
+    const dots = $$(".step-dot");
+    const toast = $("#toast");
+    const soundBtn = $("#soundBtn");
+    let soundOn = true;
+    let audioCtx = null;
+    let currentStage = 0;
+    let toastTimeout = 0;
+
+    function makeAmbience() {
+      const stars = $("#stars");
+      const ambient = $("#ambient");
+      for (let i = 0; i < 70; i++) {
+        const star = document.createElement("i");
+        star.className = "star";
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.top = `${Math.random() * 72}%`;
+        star.style.setProperty("--speed", `${1.3 + Math.random() * 3}s`);
+        star.style.transform = `scale(${.5 + Math.random() * 1.4})`;
+        stars.appendChild(star);
+      }
+      for (let i = 0; i < 19; i++) {
+        const fly = document.createElement("i");
+        fly.className = "ambient-fly";
+        fly.style.left = `${5 + Math.random() * 90}%`;
+        fly.style.top = `${35 + Math.random() * 53}%`;
+        fly.style.setProperty("--speed", `${2.5 + Math.random() * 4}s`);
+        fly.style.setProperty("--dx", `${-40 + Math.random() * 80}px`);
+        fly.style.setProperty("--dy", `${-35 + Math.random() * 70}px`);
+        fly.style.animationDelay = `${-Math.random() * 5}s`;
+        ambient.appendChild(fly);
+      }
+    }
+
+    function tone(freq, duration = .13, type = "sine", volume = .05, delay = 0) {
+      if (!soundOn) return;
+      try {
+        audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const start = audioCtx.currentTime + delay;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(volume, start);
+        gain.gain.exponentialRampToValueAtTime(.001, start + duration);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(start);
+        osc.stop(start + duration);
+      } catch (_) {}
+    }
+
+    function sparkleSound() {
+      tone(587, .12, "sine", .045);
+      tone(784, .14, "sine", .04, .08);
+      tone(1175, .18, "sine", .035, .16);
+    }
+
+    function showToast(message, duration = 1800) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => toast.classList.remove("show"), duration);
+    }
+
+    function goTo(id, stage) {
+      screens.forEach(screen => screen.classList.toggle("active", screen.id === id));
+      currentStage = stage;
+      dots.forEach((dot, i) => {
+        dot.classList.toggle("done", i < stage);
+        dot.classList.toggle("active", i === Math.min(stage, 3));
+      });
+    }
+
+    soundBtn.addEventListener("click", () => {
+      soundOn = !soundOn;
+      soundBtn.textContent = soundOn ? "♪" : "×";
+      soundBtn.setAttribute("aria-label", soundOn ? "Mute sound" : "Enable sound");
+      if (soundOn) tone(784, .15);
+    });
+
+    // Game 1: catch the glowing seeds.
+    const canvas = $("#seedCanvas");
+    const ctx = canvas.getContext("2d");
+    const seedGame = {
+      active: false,
+      caught: 0,
+      basketX: 450,
+      keys: new Set(),
+      seeds: [],
+      particles: [],
+      spawnTimer: 0,
+      last: 0
+    };
+
+    function resetSeedGame() {
+      Object.assign(seedGame, { active: true, caught: 0, basketX: 450, seeds: [], particles: [], spawnTimer: .2, last: performance.now() });
+      $("#seedCount").textContent = "0";
+    }
+
+    function spawnSeed() {
+      seedGame.seeds.push({
+        x: 70 + Math.random() * 760,
+        y: -20,
+        vy: 105 + Math.random() * 35,
+        phase: Math.random() * 7
+      });
+    }
+
+    function canvasPoint(clientX) {
+      const rect = canvas.getBoundingClientRect();
+      return (clientX - rect.left) / rect.width * canvas.width;
+    }
+
+    canvas.addEventListener("pointerdown", e => { canvas.setPointerCapture(e.pointerId); seedGame.basketX = canvasPoint(e.clientX); });
+    canvas.addEventListener("pointermove", e => { if (e.buttons || e.pointerType === "touch") seedGame.basketX = canvasPoint(e.clientX); });
+    document.addEventListener("keydown", e => {
+      if (["ArrowLeft", "ArrowRight", "a", "d"].includes(e.key)) {
+        if (currentStage === 1) e.preventDefault();
+        seedGame.keys.add(e.key.toLowerCase());
+      }
+    });
+    document.addEventListener("keyup", e => seedGame.keys.delete(e.key.toLowerCase()));
+
+    function seedBurst(x, y) {
+      for (let i = 0; i < 13; i++) {
+        const a = Math.PI * 2 * i / 13;
+        seedGame.particles.push({ x, y, vx: Math.cos(a) * (45 + Math.random() * 80), vy: Math.sin(a) * (45 + Math.random() * 80), life: 1 });
+      }
+    }
+
+    function updateSeeds(dt) {
+      if (!seedGame.active || currentStage !== 1) return;
+      if (seedGame.keys.has("arrowleft") || seedGame.keys.has("a")) seedGame.basketX -= 330 * dt;
+      if (seedGame.keys.has("arrowright") || seedGame.keys.has("d")) seedGame.basketX += 330 * dt;
+      seedGame.basketX = Math.max(65, Math.min(835, seedGame.basketX));
+      seedGame.spawnTimer -= dt;
+      if (seedGame.spawnTimer <= 0 && seedGame.seeds.length < 3) {
+        spawnSeed();
+        seedGame.spawnTimer = .55 + Math.random() * .38;
+      }
+      for (let i = seedGame.seeds.length - 1; i >= 0; i--) {
+        const seed = seedGame.seeds[i];
+        seed.y += seed.vy * dt;
+        seed.phase += dt * 3;
+        if (seed.y > 425 && seed.y < 480 && Math.abs(seed.x - seedGame.basketX) < 74) {
+          seedGame.seeds.splice(i, 1);
+          seedGame.caught++;
+          $("#seedCount").textContent = seedGame.caught;
+          seedBurst(seed.x, seed.y);
+          sparkleSound();
+          if (seedGame.caught >= 6) {
+            seedGame.active = false;
+            showToast("Six wishes found — and every one of them is you ♥", 2300);
+            setTimeout(() => goTo("flowerScreen", 2), 2400);
+          }
+        } else if (seed.y > 535) {
+          seed.y = -20;
+          seed.x = 70 + Math.random() * 760;
+        }
+      }
+      seedGame.particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 45 * dt; p.life -= dt * 1.5; });
+      seedGame.particles = seedGame.particles.filter(p => p.life > 0);
+    }
+
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, r);
+      ctx.fill();
+    }
+
+    function drawSeeds(time) {
+      const t = time / 1000;
+      ctx.clearRect(0, 0, 900, 500);
+      const grad = ctx.createLinearGradient(0, 0, 0, 500);
+      grad.addColorStop(0, "rgba(48,40,82,.08)");
+      grad.addColorStop(1, "rgba(22,59,51,.54)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 900, 500);
+
+      for (let i = 0; i < 34; i++) {
+        const x = (i * 83 + 37) % 900;
+        const y = 65 + ((i * 137) % 380);
+        ctx.globalAlpha = .16 + .13 * Math.sin(t * 2 + i);
+        ctx.fillStyle = i % 2 ? "#ffe59b" : "#b9a7e7";
+        ctx.beginPath(); ctx.arc(x, y, 2.2, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      seedGame.seeds.forEach(seed => {
+        const x = seed.x + Math.sin(seed.phase) * 11;
+        ctx.shadowColor = "#ffe59b"; ctx.shadowBlur = 22;
+        ctx.fillStyle = "#fff0a9";
+        ctx.beginPath(); ctx.ellipse(x, seed.y, 9, 14, .45, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x, seed.y + 10); ctx.quadraticCurveTo(x + 5, seed.y + 17, x + 2, seed.y + 24); ctx.stroke();
+      });
+
+      seedGame.particles.forEach(p => {
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillStyle = p.life > .5 ? "#fff2ad" : "#ff8faf";
+        ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2); ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+
+      const bx = seedGame.basketX;
+      ctx.shadowColor = "rgba(0,0,0,.26)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 8;
+      ctx.fillStyle = "#b77b61"; roundRect(bx - 66, 438, 132, 38, 15);
+      ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+      ctx.strokeStyle = "#f1c2a0"; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.arc(bx, 441, 49, Math.PI, 0); ctx.stroke();
+      ctx.strokeStyle = "rgba(255,240,213,.38)"; ctx.lineWidth = 3;
+      for (let i = -45; i <= 45; i += 18) { ctx.beginPath(); ctx.moveTo(bx + i, 442); ctx.lineTo(bx + i * .82, 472); ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(bx - 58, 455); ctx.lineTo(bx + 58, 455); ctx.moveTo(bx - 51, 466); ctx.lineTo(bx + 51, 466); ctx.stroke();
+    }
+
+    function seedLoop(time) {
+      const dt = Math.min((time - seedGame.last) / 1000 || 0, .033);
+      seedGame.last = time;
+      updateSeeds(dt);
+      drawSeeds(time);
+      requestAnimationFrame(seedLoop);
+    }
+
+    // Game 2: grow four flowers.
+    let flowersGrown = 0;
+    $$(".flower-spot").forEach((flower, index) => {
+      flower.addEventListener("click", () => {
+        if (currentStage !== 2 || flower.classList.contains("watered")) return;
+        flower.classList.add("watered");
+        flowersGrown++;
+        $("#flowerCount").textContent = flowersGrown;
+        tone([523,659,784,988][index], .28, "sine", .045);
+        burstPetals(10, flower.style.getPropertyValue("--petal") || "#ff86a7");
+        if (flowersGrown === 4) {
+          showToast("Look… the garden is starting to feel like us.", 2200);
+          setTimeout(() => {
+            goTo("melodyScreen", 3);
+            beginMelody();
+          }, 2250);
+        }
+      });
+    });
+
+    // Game 3: repeat three short melodies.
+    const flyButtons = $$(".fly-btn");
+    const roundEls = $$(".round");
+    const melodyStatus = $("#melodyStatus");
+    const sequences = [[0,2,1], [3,1,0,2], [1,3,2,0,1]];
+    const flyNotes = [523,659,784,988];
+    let melodyRound = 0;
+    let userStep = 0;
+    let acceptingInput = false;
+
+    function flashFly(index, duration = 420) {
+      flyButtons[index].classList.add("lit");
+      tone(flyNotes[index], .25, "sine", .055);
+      setTimeout(() => flyButtons[index].classList.remove("lit"), duration);
+    }
+
+    function playSequence() {
+      acceptingInput = false;
+      userStep = 0;
+      melodyStatus.textContent = "Watch the glow…";
+      const seq = sequences[melodyRound];
+      seq.forEach((value, i) => setTimeout(() => flashFly(value), 700 + i * 650));
+      setTimeout(() => {
+        acceptingInput = true;
+        melodyStatus.textContent = "Now repeat their little melody ✦";
+      }, 700 + seq.length * 650);
+    }
+
+    function beginMelody() {
+      melodyRound = 0;
+      userStep = 0;
+      acceptingInput = false;
+      roundEls.forEach(el => el.classList.remove("done"));
+      setTimeout(playSequence, 800);
+    }
+
+    flyButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        if (!acceptingInput || currentStage !== 3) return;
+        const index = Number(button.dataset.fly);
+        flashFly(index, 250);
+        const expected = sequences[melodyRound][userStep];
+        if (index === expected) {
+          userStep++;
+          if (userStep === sequences[melodyRound].length) {
+            acceptingInput = false;
+            roundEls[melodyRound].classList.add("done");
+            melodyRound++;
+            sparkleSound();
+            if (melodyRound === sequences.length) {
+              melodyStatus.textContent = "Perfect. You remembered every glow. ♥";
+              setTimeout(beginFinale, 1500);
+            } else {
+              melodyStatus.textContent = "Perfect! One more little melody…";
+              setTimeout(playSequence, 1300);
+            }
+          }
+        } else {
+          acceptingInput = false;
+          melodyStatus.textContent = "Almost! The fireflies will show you again.";
+          tone(220, .22, "sine", .035);
+          setTimeout(playSequence, 1100);
+        }
+      });
+    });
+
+    function burstPetals(count = 24, forcedColor = null) {
+      const layer = $("#petalsLayer");
+      const colors = ["#ff86a7", "#ffc987", "#b9a7e7", "#8ed9df", "#fff0ba"];
+      for (let i = 0; i < count; i++) {
+        const petal = document.createElement("i");
+        petal.className = "falling-petal";
+        petal.style.left = `${Math.random() * 100}%`;
+        petal.style.setProperty("--c", forcedColor || colors[i % colors.length]);
+        petal.style.setProperty("--drift", `${-130 + Math.random() * 260}px`);
+        petal.style.setProperty("--duration", `${3 + Math.random() * 3.5}s`);
+        petal.style.animationDelay = `${Math.random() * .7}s`;
+        layer.appendChild(petal);
+        setTimeout(() => petal.remove(), 7500);
+      }
+    }
+
+    function beginFinale() {
+      goTo("transitionScreen", 4);
+      dots.forEach(dot => { dot.classList.add("done"); dot.classList.remove("active"); });
+      sparkleSound();
+      setTimeout(() => {
+        app.classList.add("dawn");
+        burstPetals(70);
+      }, 800);
+      setTimeout(() => {
+        goTo("finaleScreen", 4);
+        typeLetter();
+      }, 3500);
+    }
+
+    const letterText = `My Love,
+
+It has only been four days, but somehow you have already made my days feel warmer, lighter, and a little more beautiful.
+
+I know our story has only just begun. We still have so much to learn about each other, so many conversations to share, and so many small memories waiting for us. But I want you to know that every moment with you already feels special to me.
+
+Thank you for coming into my life and giving my heart a new reason to smile. I do not need to rush our story—I simply want to enjoy every page of it with you, one day at a time.
+
+If these first four days can feel this lovely, I cannot wait to discover everything that comes next.
+
+Happy 4th day, honey. I am really happy that it is you.`;
+
+    let typingTimer = null;
+    function typeLetter() {
+      clearInterval(typingTimer);
+      const body = $("#letterBody");
+      const signature = $("#signature");
+      const actions = $("#finalActions");
+      body.textContent = "";
+      signature.hidden = true;
+      actions.hidden = true;
+      let i = 0;
+      typingTimer = setInterval(() => {
+        body.textContent += letterText[i] || "";
+        i++;
+        if (i % 3 === 0) tone(330 + (i % 5) * 20, .02, "sine", .008);
+        if (i >= letterText.length) {
+          clearInterval(typingTimer);
+          signature.hidden = false;
+          actions.hidden = false;
+          burstPetals(45);
+          [523,659,784,1047].forEach((note, n) => tone(note, .45, "sine", .035, n * .16));
+        }
+      }, 18);
+    }
+
+    function replay() {
+      clearInterval(typingTimer);
+      app.classList.remove("dawn");
+      flowersGrown = 0;
+      $("#flowerCount").textContent = "0";
+      $$(".flower-spot").forEach(flower => flower.classList.remove("watered"));
+      goTo("introScreen", 0);
+      dots.forEach((dot, i) => { dot.classList.toggle("active", i === 0); dot.classList.remove("done"); });
+    }
+
+    $("#beginBtn").addEventListener("click", () => {
+      tone(523, .18, "sine", .04);
+      goTo("seedScreen", 1);
+      resetSeedGame();
+    });
+    $("#replayBtn").addEventListener("click", replay);
+
+    makeAmbience();
+    drawSeeds(0);
+    requestAnimationFrame(seedLoop);
+  })();
+  </script>
+</body>
+</html>
